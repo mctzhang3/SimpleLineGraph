@@ -66,9 +66,16 @@ public abstract class LineChartBase<T extends BaseLineData<? extends
      */
     protected YAxis mAxisLeft;
 
+    /**
+     * the object representing the labels on the right y-axis
+     */
+    protected YAxis mAxisRight;
+
     protected YAxisRenderer mAxisRendererLeft;
+    protected YAxisRenderer mAxisRendererRight;
 
     protected ChartTransformer mLeftAxisTransformer;
+    protected ChartTransformer mRightAxisTransformer;
 
     protected XAxisRenderer mXAxisRenderer;
 
@@ -89,10 +96,13 @@ public abstract class LineChartBase<T extends BaseLineData<? extends
         super.init();
 
         mAxisLeft = new YAxis(YAxis.AxisDependency.LEFT);
+        mAxisRight = new YAxis(YAxis.AxisDependency.RIGHT);
 
         mLeftAxisTransformer = new ChartTransformer(mChartDimens);
+        mRightAxisTransformer = new ChartTransformer(mChartDimens);
 
         mAxisRendererLeft = new YAxisRenderer(mChartDimens, mAxisLeft, mLeftAxisTransformer);
+        mAxisRendererRight = new YAxisRenderer(mChartDimens, mAxisRight, mRightAxisTransformer);
 
         mXAxisRenderer = new XAxisRenderer(mChartDimens, mXAxis, mLeftAxisTransformer);
         mGridBackgroundPaint = new Paint();
@@ -112,14 +122,14 @@ public abstract class LineChartBase<T extends BaseLineData<? extends
      * Returns the maximum value this chart can display on it's y-axis.
      */
     public float getYChartMax() {
-        return mAxisLeft.mAxisMaximum;
+        return Math.max(mAxisLeft.mAxisMaximum, mAxisRight.mAxisMaximum);
     }
 
     /**
      * Returns the minimum value this chart can display on it's y-axis.
      */
     public float getYChartMin() {
-        return mAxisLeft.mAxisMinimum;
+        return Math.min(mAxisLeft.mAxisMinimum, mAxisRight.mAxisMinimum);
     }
 
     @Override
@@ -137,17 +147,24 @@ public abstract class LineChartBase<T extends BaseLineData<? extends
         if (mAxisLeft.isEnabled())
             mAxisRendererLeft.computeAxis(mAxisLeft.mAxisMinimum, mAxisLeft.mAxisMaximum, mAxisLeft.isInverted());
 
+        if (mAxisRight.isEnabled())
+            mAxisRendererRight.computeAxis(mAxisRight.mAxisMinimum, mAxisRight.mAxisMaximum, mAxisRight.isInverted());
+
         if (mXAxis.isEnabled())
             mXAxisRenderer.computeAxis(mXAxis.mAxisMinimum, mXAxis.mAxisMaximum, false);
 
         mXAxisRenderer.renderAxisLine(canvas);
         mAxisRendererLeft.renderAxisLine(canvas);
+        mAxisRendererRight.renderAxisLine(canvas);
 
         if (mXAxis.isDrawGridLinesBehindDataEnabled())
             mXAxisRenderer.renderGridLines(canvas);
 
         if (mAxisLeft.isDrawGridLinesBehindDataEnabled())
             mAxisRendererLeft.renderGridLines(canvas);
+
+        if (mAxisRight.isDrawGridLinesBehindDataEnabled())
+            mAxisRendererRight.renderGridLines(canvas);
 
         int clipRestoreCount = canvas.save();
 
@@ -164,11 +181,15 @@ public abstract class LineChartBase<T extends BaseLineData<? extends
         if (!mAxisLeft.isDrawGridLinesBehindDataEnabled())
             mAxisRendererLeft.renderGridLines(canvas);
 
+        if (!mAxisRight.isDrawGridLinesBehindDataEnabled())
+            mAxisRendererRight.renderGridLines(canvas);
+
         // Removes clipping rectangle
         canvas.restoreToCount(clipRestoreCount);
 
         mXAxisRenderer.renderAxisLabels(canvas);
         mAxisRendererLeft.renderAxisLabels(canvas);
+        mAxisRendererRight.renderAxisLabels(canvas);
 
         if (isClipValuesToContentEnabled()) {
             clipRestoreCount = canvas.save();
@@ -200,13 +221,18 @@ public abstract class LineChartBase<T extends BaseLineData<? extends
             Log.i(LOG_TAG, "Preparing Value-Px Matrix, xmin: " + mXAxis.mAxisMinimum + ", xmax: "
                     + mXAxis.mAxisMaximum + ", xdelta: " + mXAxis.mAxisRange);
 
-      mLeftAxisTransformer.prepareMatrixValuePx(mXAxis.mAxisMinimum,
+        mRightAxisTransformer.prepareMatrixValuePx(mXAxis.mAxisMinimum,
+                mXAxis.mAxisRange,
+                mAxisRight.mAxisRange,
+                mAxisRight.mAxisMinimum);
+        mLeftAxisTransformer.prepareMatrixValuePx(mXAxis.mAxisMinimum,
                 mXAxis.mAxisRange,
                 mAxisLeft.mAxisRange,
                 mAxisLeft.mAxisMinimum);
     }
 
     protected void prepareOffsetMatrix() {
+        mRightAxisTransformer.prepareMatrixOffset(mAxisRight.isInverted());
         mLeftAxisTransformer.prepareMatrixOffset(mAxisLeft.isInverted());
     }
 
@@ -228,6 +254,7 @@ public abstract class LineChartBase<T extends BaseLineData<? extends
         calcMinMax();
 
         mAxisRendererLeft.computeAxis(mAxisLeft.mAxisMinimum, mAxisLeft.mAxisMaximum, mAxisLeft.isInverted());
+        mAxisRendererRight.computeAxis(mAxisRight.mAxisMinimum, mAxisRight.mAxisMaximum, mAxisRight.isInverted());
         mXAxisRenderer.computeAxis(mXAxis.mAxisMinimum, mXAxis.mAxisMaximum, false);
 
         if (mLegend != null)
@@ -251,10 +278,14 @@ public abstract class LineChartBase<T extends BaseLineData<? extends
         // calculate axis range (min / max) according to provided data
 
         if (mAxisLeft.isEnabled())
-            mAxisLeft.calculate(mData.getYMin(YAxis.AxisDependency.RIGHT),
+            mAxisLeft.calculate(mData.getYMin(YAxis.AxisDependency.LEFT),
+                    mData.getYMax(YAxis.AxisDependency.LEFT));
+
+        if (mAxisRight.isEnabled())
+            mAxisRight.calculate(mData.getYMin(YAxis.AxisDependency.RIGHT),
                     mData.getYMax(YAxis.AxisDependency.RIGHT));
 
-       calculateOffsets();
+        calculateOffsets();
     }
 
     @Override
@@ -263,7 +294,9 @@ public abstract class LineChartBase<T extends BaseLineData<? extends
         mXAxis.calculate(mData.getXMin(), mData.getXMax());
 
         // calculate axis range (min / max) according to provided data
-        mAxisLeft.calculate(mData.getYMin(YAxis.AxisDependency.RIGHT), mData.getYMax(YAxis.AxisDependency.RIGHT));
+        mAxisLeft.calculate(mData.getYMin(YAxis.AxisDependency.LEFT), mData.getYMax(YAxis.AxisDependency.LEFT));
+        mAxisRight.calculate(mData.getYMin(YAxis.AxisDependency.RIGHT), mData.getYMax(YAxis.AxisDependency
+                .RIGHT));
     }
 
     protected void calculateLegendOffsets(RectF offsets) {
@@ -362,6 +395,11 @@ public abstract class LineChartBase<T extends BaseLineData<? extends
                         .getPaintAxisLabels());
             }
 
+            if (mAxisRight.needsOffset()) {
+                offsetRight += mAxisRight.getRequiredWidthSpace(mAxisRendererRight
+                        .getPaintAxisLabels());
+            }
+
             if (mXAxis.isEnabled() && mXAxis.isDrawLabelsEnabled()) {
 
                 float xLabelHeight = mXAxis.mLabelRotatedHeight + mXAxis.getYOffset();
@@ -448,7 +486,10 @@ public abstract class LineChartBase<T extends BaseLineData<? extends
      * @return
      */
     protected float getAxisRange(YAxis.AxisDependency axis) {
+        if (axis == YAxis.AxisDependency.LEFT)
             return mAxisLeft.mAxisRange;
+        else
+            return mAxisRight.mAxisRange;
     }
 
     protected float[] mGetPositionBuffer = new float[2];
@@ -472,6 +513,16 @@ public abstract class LineChartBase<T extends BaseLineData<? extends
         getTransformer(axis).pointValuesToPixel(mGetPositionBuffer);
 
         return PointFloat.getInstance(mGetPositionBuffer[0], mGetPositionBuffer[1]);
+    }
+
+    /**
+     * sets the number of maximum visible drawn values on the chart only active
+     * when setDrawValues() is enabled
+     *
+     * @param count
+     */
+    public void setMaxVisibleValueCount(int count) {
+        this.mMaxVisibleCount = count;
     }
 
     public int getMaxVisibleCount() {
@@ -532,7 +583,7 @@ public abstract class LineChartBase<T extends BaseLineData<? extends
      */
     @Override
     public float getLowestVisibleX() {
-        getTransformer(YAxis.AxisDependency.RIGHT).getValuesByTouchPoint(mChartDimens.contentLeft(),
+        getTransformer(YAxis.AxisDependency.LEFT).getValuesByTouchPoint(mChartDimens.contentLeft(),
                 mChartDimens.contentBottom(), posForGetLowestVisibleX);
         float result = (float) Math.max(mXAxis.mAxisMinimum, posForGetLowestVisibleX.x);
         return result;
@@ -551,7 +602,7 @@ public abstract class LineChartBase<T extends BaseLineData<? extends
      */
     @Override
     public float getHighestVisibleX() {
-        getTransformer(YAxis.AxisDependency.RIGHT).getValuesByTouchPoint(mChartDimens.contentRight(),
+        getTransformer(YAxis.AxisDependency.LEFT).getValuesByTouchPoint(mChartDimens.contentRight(),
                 mChartDimens.contentBottom(), posForGetHighestVisibleX);
         float result = (float) Math.min(mXAxis.mAxisMaximum, posForGetHighestVisibleX.x);
         return result;
@@ -597,6 +648,16 @@ public abstract class LineChartBase<T extends BaseLineData<? extends
     }
 
     /**
+     * Returns the right y-axis object. In the horizontal bar-chart, this is the
+     * bottom axis.
+     *
+     * @return
+     */
+    public YAxis getAxisRight() {
+        return mAxisRight;
+    }
+
+    /**
      * Returns the y-axis object to the corresponding AxisDependency. In the
      * horizontal bar-chart, LEFT == top, RIGHT == BOTTOM
      *
@@ -604,7 +665,10 @@ public abstract class LineChartBase<T extends BaseLineData<? extends
      * @return
      */
     public YAxis getAxis(YAxis.AxisDependency axis) {
-        return mAxisLeft;
+        if (axis == YAxis.AxisDependency.LEFT)
+            return mAxisLeft;
+        else
+            return mAxisRight;
     }
 
 
@@ -654,7 +718,10 @@ public abstract class LineChartBase<T extends BaseLineData<? extends
      * @return
      */
     public ChartTransformer getTransformer(YAxis.AxisDependency which) {
+        if (which == YAxis.AxisDependency.LEFT)
             return mLeftAxisTransformer;
+        else
+            return mRightAxisTransformer;
     }
 }
 

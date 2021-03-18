@@ -68,22 +68,28 @@ class MainActivity : AppCompatActivity() {
         run {   // // Y-Axis Style // //
             yAxis = chart!!.axisLeft
 
+            yAxis.isEnabled = false
             // disable dual axis (only use LEFT axis)
 //            chart.getAxisRight().setEnabled(true)
 
             // horizontal grid lines
 //            yAxis.enableGridDashedLine(10f, 10f, 0f)
-            yAxis.valueFormatter = MyAxisValueFormatter()
+//            yAxis.valueFormatter = MyAxisValueFormatter()
             // axis range
-            yAxis.setAxisMaximum(200f)
-            yAxis.setAxisMinimum(-50f)
-            yAxis.setLabelCount(8, true)
+//            yAxis.setAxisMaximum(200f)
+//            yAxis.setAxisMinimum(-50f)
+//            yAxis.setLabelCount(8, true)
         }
 
         setData(45, 180f)
 
-//        val rightAxis: YAxis = chart.getAxisRight()
-//        rightAxis.setDrawGridLines(false);
+        val rightAxis: YAxis? = chart?.axisRight
+        rightAxis?.valueFormatter = MyAxisValueFormatter()
+        rightAxis?.setAxisMaximum(200f)
+        rightAxis?.setAxisMinimum(-50f)
+        rightAxis?.setLabelCount(8, true)
+
+    //        rightAxis.setDrawGridLines(false);
 //        rightAxis.setTypeface(tfLight);
 //        rightAxis.setLabelCount(8, false);
         //        rightAxis.setDrawGridLines(false);
