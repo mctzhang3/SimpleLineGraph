@@ -3,6 +3,7 @@ package com.mzhang.linegraph
 import android.graphics.Color
 import android.graphics.DashPathEffect
 import android.os.Bundle
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.mzhang.linegraph.lineGraph.chartBase.LineChart
 import com.mzhang.linegraph.lineGraph.chartData.ILineDataSet
@@ -11,6 +12,7 @@ import com.mzhang.linegraph.lineGraph.chartData.LineDataSet
 import com.mzhang.linegraph.lineGraph.dataPoints.Entry
 import com.mzhang.linegraph.lineGraph.xyAxes.XAxis
 import com.mzhang.linegraph.lineGraph.xyAxes.YAxis
+import java.lang.Thread.sleep
 import java.util.*
 
 class MainActivity : AppCompatActivity() {
@@ -60,8 +62,9 @@ class MainActivity : AppCompatActivity() {
         run {   // // X-Axis Style // //
             xAxis = chart!!.xAxis
 
+            xAxis.setDrawGridLines(false)
             // vertical grid lines
-            xAxis.enableGridDashedLine(10f, 10f, 0f)
+//            xAxis.enableGridDashedLine(10f, 10f, 0f)
         }
 
         var yAxis: YAxis
@@ -69,6 +72,7 @@ class MainActivity : AppCompatActivity() {
             yAxis = chart!!.axisLeft
 
             yAxis.isEnabled = false
+
             // disable dual axis (only use LEFT axis)
 //            chart.getAxisRight().setEnabled(true)
 
@@ -84,6 +88,7 @@ class MainActivity : AppCompatActivity() {
         setData(45, 180f)
 
         val rightAxis: YAxis? = chart?.axisRight
+        rightAxis?.setDrawAxisLine(false)
         rightAxis?.valueFormatter = MyAxisValueFormatter()
         rightAxis?.setAxisMaximum(200f)
         rightAxis?.setAxisMinimum(-50f)
@@ -177,4 +182,18 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        movingText()
+    }
+
+    private fun movingText() {
+        val textView = findViewById<TextView>(R.id.tvMovingText)
+        val y = textView.y
+        val x = textView.x
+
+        for (i in 1 .. 300) {
+            textView.x = textView.x + 1
+        }
+    }
 }

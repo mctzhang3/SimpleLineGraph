@@ -3,6 +3,7 @@ package com.mzhang.linegraph
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.github.mikephil.charting.charts.LineChart
 import com.github.mikephil.charting.components.XAxis
@@ -13,6 +14,7 @@ import com.github.mikephil.charting.data.LineDataSet
 import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.interfaces.datasets.ILineDataSet
 import com.github.mikephil.charting.listener.OnChartValueSelectedListener
+import com.mzhang.linegraph.custom.MyMarkerView
 //import com.github.mikephil.charting.components.LimitLine
 //import com.github.mikephil.charting.components.LimitLine.LimitLabelPosition
 //import com.mzhang.linegraph.lineGraph.chartBase.LineChart
@@ -26,11 +28,16 @@ import java.util.*
 
 class LineChartLibraryActivity : AppCompatActivity(), OnChartValueSelectedListener {
     private var chart: LineChart? = null
+    private var tvY: TextView? = null
+    private var tvX: TextView? = null
+    private var yRightAxis: YAxis? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_line_chart_lib)
 
+        tvX = findViewById(R.id.tvMovingText1)
+        tvY = findViewById(R.id.tvValue)
 //        initLineGraphWithLocalLib()
         initLineGraphMP()
     }
@@ -52,16 +59,18 @@ class LineChartLibraryActivity : AppCompatActivity(), OnChartValueSelectedListen
             chart?.setOnChartValueSelectedListener(this)
             chart?.setDrawGridBackground(false)
 
+            // for drag
             chart?.isHighlightPerDragEnabled = true
-            // create marker to display box when values are selected
-//            val mv = MyMarkerView(this, R.layout.custom_marker_view)
-//
-//            // Set the marker to the chart
-//            mv.setChartView(chart)
-//            chart?.setMarker(mv)
+
+//             create marker to display box when values are selected
+            val mv = MyMarkerView(this, R.layout.custom_marker_view)
+
+            // Set the marker to the chart
+            mv.setChartView(chart)
+            chart?.setMarker(mv)
 
             // enable scaling and dragging
-            chart?.setDragEnabled(false)
+            chart?.setDragEnabled(true)
             chart?.setScaleEnabled(false)
             // chart?.setScaleXEnabled(true);
             // chart?.setScaleYEnabled(true);
@@ -76,6 +85,11 @@ class LineChartLibraryActivity : AppCompatActivity(), OnChartValueSelectedListen
 
             // vertical grid lines
 //            xAxis.enableGridDashedLine(10f, 10f, 0f)
+            // hide grid lines
+            xAxis.setDrawGridLines(false)
+
+            // x Axis label position
+            xAxis.position = XAxis.XAxisPosition.BOTTOM
         }
 
         var yAxis: YAxis
@@ -92,19 +106,19 @@ class LineChartLibraryActivity : AppCompatActivity(), OnChartValueSelectedListen
 //            yAxis.axisMaximum = 200f
 //            yAxis.axisMinimum = -50f
         }
-        var yRightAxis: YAxis
+//        var yRightAxis: YAxis
         run {   // // Y-Axis Style // //
             yRightAxis = chart!!.axisRight
 
             // disable dual axis (only use LEFT axis)
-//            chart!!.axisRight.isEnabled = false
+//            chart!!.axisRight.isEnabled = true
 
             // horizontal grid lines
 //            yAxis.enableGridDashedLine(10f, 10f, 0f)
 
             // axis range
-            yRightAxis.axisMaximum = 200f
-            yRightAxis.axisMinimum = -50f
+//            yRightAxis.axisMaximum = 200f
+//            yRightAxis.axisMinimum = -50f
         }
 
         // add data
@@ -117,92 +131,12 @@ class LineChartLibraryActivity : AppCompatActivity(), OnChartValueSelectedListen
 
     }
 
-    private fun initLineGraphWithLocalLib() {
-        run {
-            chart = findViewById<LineChart>(R.id.chart1)
-
-            // background color
-            chart?.setBackgroundColor(Color.WHITE)
-//            chart?.setDrawGridBackground(false)
-            chart?.setDrawBorders(false)
-            chart?.axisLeft?.setDrawAxisLine(false)
-
-            // disable description text
-//            chart?.getDescription().setEnabled(false)
-
-            // enable touch gestures
-//            chart?.setTouchEnabled(true)
-
-            // set listeners
-//            chart?.setOnChartValueSelectedListener(this)
-            chart?.setDrawGridBackground(false)
-
-            // create marker to display box when values are selected
-//            val mv = MyMarkerView(this, R.layout.custom_marker_view)
-//
-//            // Set the marker to the chart
-//            mv.setChartView(chart)
-//            chart?.setMarker(mv)
-
-            // enable scaling and dragging
-//            chart?.setDragEnabled(true)
-//            chart?.setScaleEnabled(true)
-            // chart?.setScaleXEnabled(true);
-            // chart?.setScaleYEnabled(true);
-
-            // force pinch zoom along both axis
-//            chart?.setPinchZoom(true)
-        }
-
-        var xAxis: XAxis
-        run {   // // X-Axis Style // //
-            xAxis = chart!!.xAxis
-
-            // vertical grid lines
-            xAxis.enableGridDashedLine(10f, 10f, 0f)
-        }
-
-        var yAxis: YAxis
-        run {   // // Y-Axis Style // //
-            yAxis = chart!!.axisLeft
-
-            yAxis.isEnabled = false
-            // disable dual axis (only use LEFT axis)
-//            chart?.getAxisRight().setEnabled(true)
-
-            // horizontal grid lines
-//            yAxis.enableGridDashedLine(10f, 10f, 0f)
-//            yAxis.valueFormatter = MyAxisValueFormatter()
-            // axis range
-//            yAxis.setAxisMaximum(200f)
-//            yAxis.setAxisMinimum(-50f)
-//            yAxis.setLabelCount(8, true)
-        }
-
-        setData(45, 180f)
-
-        val rightAxis: YAxis? = chart?.axisRight
-        rightAxis?.valueFormatter = LineChartLibValueFormatter()
-        rightAxis?.setAxisMaximum(200f)
-        rightAxis?.setAxisMinimum(-50f)
-        rightAxis?.setLabelCount(8, true)
-
-        //        rightAxis.setDrawGridLines(false);
-//        rightAxis.setTypeface(tfLight);
-//        rightAxis.setLabelCount(8, false);
-        //        rightAxis.setDrawGridLines(false);
-//        rightAxis.setTypeface(tfLight);
-//        rightAxis.setLabelCount(8, false);
-//        rightAxis.setValueFormatter(MyAxisValueFormatter())
-//        rightAxis.setSpaceTop(15f);
-//        rightAxis.setAxisMinimum(0f); // this replaces setStartAtZero(true)
-    }
-
     private fun setData(count: Int, range: Float) {
         val values: ArrayList<Entry> = ArrayList<Entry>()
         for (i in 0 until count) {
             val value = (Math.random() * range).toFloat()
             values.add(Entry(i.toFloat(), value, null))
+            Log.i("SETDATA", "(i, value) = ($i, $value)")
         }
         val set1: LineDataSet
         if (chart?.data != null &&
@@ -222,7 +156,7 @@ class LineChartLibraryActivity : AppCompatActivity(), OnChartValueSelectedListen
             set1.valueTextSize = 0f
 
             // black lines and points
-            set1.setColor(Color.RED)
+            set1.setColor(Color.BLACK)
             set1.setCircleColor(Color.TRANSPARENT)
 
             // line thickness and point size
@@ -239,10 +173,18 @@ class LineChartLibraryActivity : AppCompatActivity(), OnChartValueSelectedListen
 
             // text size of values
             set1.valueTextSize = 0f
+//            set1.setDrawHorizontalHighlightIndicator(false)
+            set1.highLightColor = Color.RED
+            set1.highlightLineWidth = 2f
+            set1.setDrawHighlightIndicators(true)
+            set1.setDrawHorizontalHighlightIndicator(false)
+            set1.isHighlightEnabled = true
 
             // draw selection line as dashed
-//            set1.enableDashedHighlightLine(10f, 5f, 0f)
+            set1.enableDashedHighlightLine(10f, 0f, 0f)
 
+            // Right Axis displays the correct value
+            set1.axisDependency = YAxis.AxisDependency.RIGHT
             // set the filled area
 //            set1.setDrawFilled(true)
 //            set1.setFillFormatter(object : IFillFormatter() {
@@ -261,8 +203,9 @@ class LineChartLibraryActivity : AppCompatActivity(), OnChartValueSelectedListen
 //            }
 
             val yAxis = chart!!.axisRight
-            yAxis.setAxisMaximum(220f)
-            yAxis.setAxisMinimum(-10f)
+            yAxis.setAxisMaximum(200f)
+            yAxis.setAxisMinimum(0f)
+            yAxis.setLabelCount(8, true)
 
             val dataSets: ArrayList<ILineDataSet> = ArrayList<ILineDataSet>()
             dataSets.add(set1) // add the data sets
@@ -280,10 +223,17 @@ class LineChartLibraryActivity : AppCompatActivity(), OnChartValueSelectedListen
         Log.i("LOW HIGH", "low: " + chart!!.lowestVisibleX + ", high: " + chart!!.highestVisibleX)
         Log.i("MIN MAX", "xMin: " + chart!!.xChartMin + ", xMax: " + chart!!.xChartMax + ", yMin: " + chart!!.yChartMin + ", yMax: " + chart!!.yChartMax)
 
+//        tvY?.text = h?.y.toString()
+//        tvX?.text = h?.x.toString()
+        tvY?.text = e?.y.toString()
+        tvX?.text = e?.x.toString()
+        val width = tvX?.width ?: 0
+        tvX?.x = h?.xPx?.minus(width / 2) ?: 0f
     }
 
     override fun onNothingSelected() {
         Log.i("Nothing selected", "Nothing selected.")
+        chart?.highlightValue(null)
     }
 
 }
