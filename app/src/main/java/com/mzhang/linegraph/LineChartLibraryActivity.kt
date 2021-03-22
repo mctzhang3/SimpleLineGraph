@@ -1,8 +1,10 @@
 package com.mzhang.linegraph
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.view.MotionEvent
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.github.mikephil.charting.charts.LineChart
@@ -42,6 +44,7 @@ class LineChartLibraryActivity : AppCompatActivity(), OnChartValueSelectedListen
         initLineGraphMP()
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     private fun initLineGraphMP() {
         run {   // // Chart Style // //
             chart = findViewById(R.id.chart1)
@@ -128,6 +131,14 @@ class LineChartLibraryActivity : AppCompatActivity(), OnChartValueSelectedListen
 
         // draw points over time
         chart!!.animateX(1500)
+
+        // remove highlight for untouch
+        chart?.setOnTouchListener { _, event ->
+            if (event.action == MotionEvent.ACTION_UP) {
+                chart?.highlightValue(null)
+            }
+            return@setOnTouchListener false
+        }
 
     }
 
